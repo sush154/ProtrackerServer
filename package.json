@@ -1,0 +1,23 @@
+{
+  "name": "protracker-server",
+  "version": "1.0.0",
+  "description": "Server project for Protracker",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "cookie-parser": "^1.4.3",
+    "express": "^4.15.2",
+    "express-session": "^1.15.2",
+    "mongoose": "^4.9.9",
+    "mongoose-sequence-plugin": "^1.0.5",
+    "morgan": "^1.8.1",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sushant Joshi",
+  "license": "ISC"
+}
