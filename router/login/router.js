@@ -66,7 +66,7 @@ loginRouter.post('', function(req, res, next){
         if(err){res.json({status:500});}
         if(!user){res.json({status: 401});}
         var token = Math.random().toString() + "-" + user._id;
-        res.cookie('token',Math.random().toString(), { httpOnly: false,secure:false,expires: new Date(Date.now() + (300 * 1000))});
+        res.cookie('token',token, { httpOnly: false,secure:false,expires: new Date(Date.now() + (300 * 1000))});
         res.json({status: 200});
         
    })(req, res, next);
