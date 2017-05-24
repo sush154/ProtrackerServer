@@ -4,8 +4,7 @@ var sequenceGenrator = require('mongoose-sequence-plugin');
 var projectSchema = mongoose.Schema({
 	projectId		:	String,
 	projectName		:	String,
-	clientId		:	String,
-	clientName		:	String,
+	client			:	{type: mongoose.Schema.Types.ObjectId, ref:'client'},
 	description		:	String,
 	userId			:	String
 });
