@@ -16,12 +16,12 @@ TaskRouter.use(function (req, res, next){
 	res.header("Access-Control-Allow-Origin", "http://localhost:3000");
     res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    /*if((req.session.cookie._expires > (new Date())) && req.cookies['token']){
+    if((req.session.cookie._expires > (new Date())) && req.cookies['token']){
 	    next();
 	} else {
 	    res.cookie("token", "", { expires: new Date() });
 	    res.json({data: {status : 401}});
-	}*/next();
+	}/*next();*/
 });
 
 
