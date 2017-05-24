@@ -6,8 +6,10 @@ var express = require('express'),
 var loginMiddlware = require('./router/login/router');
 var registerMiddleware = require('./router/register/router');
 var projectMiddleware = require('./router/project/router');
-var authMiddleware = require('./router/auth/router');
+var clientMiddleware = require('./router/client/router');
+var taskMiddleware = require('./router/task/router');
+
 
 app.use(bodyParser.json());
-app.use('/',[loginMiddlware,registerMiddleware,projectMiddleware,authMiddleware]);
+app.use('/',[loginMiddlware,registerMiddleware,projectMiddleware, clientMiddleware, taskMiddleware]);
 module.exports = app;
