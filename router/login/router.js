@@ -54,7 +54,7 @@ loginRouter.use(function(req, res, next){
 });
 
 loginRouter.use(cookieParser());
-loginRouter.use(session({ secret: 'secretkey', cookie: { httpOnly: false,secure:false,expires: new Date(Date.now() + (300 * 1000))} })); // session secret
+loginRouter.use(session({ secret: 'secretkey', cookie: { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))} })); // session secret
 loginRouter.use(passport.initialize());
 loginRouter.use(passport.session());
 
@@ -66,11 +66,11 @@ loginRouter.post('', function(req, res, next){
         if(err){res.json({status:500});}
         if(!user){res.json({status: 401});}
         var token = Math.random().toString() + "-" + user._id;
-        res.cookie('token',token, { httpOnly: false,secure:false,expires: new Date(Date.now() + (300 * 1000))});
+        res.cookie('token',token, { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
         res.json({status: 200});
         
    })(req, res, next);
-	console.log("cookies after login", req.cookies);
+	
 });
 
 loginMidlleware.use('/user/login', loginRouter);
