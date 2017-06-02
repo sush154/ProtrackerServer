@@ -6,7 +6,10 @@ var projectSchema = mongoose.Schema({
 	projectName		:	String,
 	client			:	{type: mongoose.Schema.Types.ObjectId, ref:'client'},
 	description		:	String,
-	userId			:	String
+	userId			:	String,
+	isCurrent		: 	Boolean,
+	completionDate	: 	Date,
+	expCompDate		:	Date
 });
 
 projectSchema.plugin(sequenceGenrator,{

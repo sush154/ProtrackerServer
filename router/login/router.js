@@ -63,10 +63,12 @@ loginRouter.post('', function(req, res, next){
 	
 	passport.authenticate('local-login', function(err, user, info){
 
-        if(err){res.json({status:500});}
-        if(!user){res.json({status: 401});}
+        if(err){console.log("500");res.json({status:500});}
+        if(!user){console.log("401");res.json({status: 401});}
+        console.log("200");
         var token = Math.random().toString() + "-" + user._id;
         res.cookie('token',token, { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
+        res.cookie('currentProject',user.currentProject, { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
         res.json({status: 200});
         
    })(req, res, next);

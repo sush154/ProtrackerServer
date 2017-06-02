@@ -12,6 +12,7 @@ var TaskSchema = mongoose.Schema({
 	expectedComDate	: Date,
 	completionDate	: Date,
 	userId			: String,
+	projectId		: String,
 	images			: [{type: String, ref: 'images'}]
 });
 

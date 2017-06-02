@@ -41,7 +41,7 @@ TaskRouter.post('/addTask', function(req, res){
 	newTask.taskStatus = req.body.taskStatus;
 	newTask.userId = userId;
 	newTask.expectedComDate = dateConverter(req.body.expectedComDate);
-
+	newTask.projectId = req.body.projectId;
 	
 	newTask.save(function(err, doc){
 		if(err) res.json({data: {status : 500}});
@@ -55,7 +55,9 @@ TaskRouter.get('/getAllTasks', function(req, res){
 	//var userId = '591ac03b5f2cf028a0124b6b';
 	//var userId = '591ad73de365082a6c00db32';
 	
-	TaskModel.find({userId : userId},'taskId taskSummary criticality expectedComDate taskStatus', function(err, tasks){
+	var projectId = req.cookies['currentProject'];
+	
+	TaskModel.find({userId : userId, projectId : projectId},'taskId taskSummary criticality expectedComDate taskStatus completionDate', function(err, tasks){
 		if(err) res.json({data: {status : 500}});
 		res.json({data: {status : 200, tasks}});
 	});
