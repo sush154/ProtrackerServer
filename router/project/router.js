@@ -47,16 +47,23 @@ ProjectRouter.post('/addProject', function(req, res, next){
 	newProject.description = req.body.description;
 	newProject.isCurrent = req.body.isCurrent;
 	if(!req.body.isCurrent){
+		console.log(111);
 		if(req.body.completionDate !== undefined && req.body.completionDate !== ''){
+			console.log(222);
 			newProject.completionDate = dateConverter(req.body.completionDate);
+			console.log(req.body.completionDate);
 		}else{
+			console.log(333);
 			newProject.completionDate = "";
 		}
 	}else {
-		if(req.body.expComDate !== undefined && req.body.expComDate !== ''){
-			newProject.expComDate = dateConverter(req.body.expComDate);
+		console.log(444);
+		if(req.body.expCompDate !== undefined && req.body.expCompDate !== ''){
+			console.log(555);
+			newProject.expCompDate = dateConverter(req.body.expCompDate);
 		}else{
-			newProject.expComDate = "";
+			console.log(666);
+			newProject.expCompDate = "";
 		}
 	}
 	
@@ -86,7 +93,7 @@ ProjectRouter.post('/addProject', function(req, res, next){
 ProjectRouter.get('/getProject/:projectId', function(req, res, next){
 	var userId = req.cookies['token'].split('-')[1];
 	
-	ProjectModel.findOne({projectId: req.params.projectId, userId : user},function(err, project){
+	ProjectModel.findOne({projectId: req.params.projectId, userId : userId}).populate('client').exec(function(err, project){
 		if(err) res.json({data:{status : 500}});
 		res.json({data: {status : 200, project}});
 	});
@@ -106,26 +113,65 @@ ProjectRouter.post('/updateProject', function(req, res, next){
 		projectUpdate.description = req.body.description;
 	}
 	
-	if(req.body.completionDate !== ""){
-		projectUpdate.completionDate = dateConverter(req.body.completionDate);
-		projectUpdate.isCurrent = 'false';
-		
-		//remove current project id from cookies
-		res.cookie('currentProject','', { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
-		
-		//Update user document, by removing current project id.
-		UserModel.update({_id: userId},{'currentProject' : ''}, function(err, doc){
-			if(err) res.json({data: {status : 500}});
-			res.json({data: {status : 200}});
-		});
+	if(req.body.client !== ""){
+		projectUpdate.client = req.body.client;
+	}
+	
+	projectUpdate.isCurrent = req.body.isCurrent;
+	
+	if(req.body.expCompDate !== "" && req.body.expCompDate !== null){
+		if(req.body.isCurrent){
+			projectUpdate.expCompDate = dateConverter(req.body.expCompDate);
+		}else {
+			projectUpdate.expCompDate = "";
+		}
 	}
 	
 	
+	if(req.body.completionDate !== "" && req.body.completionDate !== null){
+		if(!req.body.isCurrent){
+			projectUpdate.completionDate = dateConverter(req.body.completionDate);
+			projectUpdate.isCurrent = 'false';
+			
+			//remove current project id from cookies
+			res.cookie('currentProject','', { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
+			
+			//Update user document, by removing current project id.
+			UserModel.update({_id: userId},{'currentProject' : ''}, function(err, doc){
+				if(err) res.json({data: {status : 500}});
+				res.json({data: {status : 200}});
+			});
+		}else {
+			projectUpdate.completionDate = "";
+		}
+	}
+	
+	console.log(projectUpdate);
 	//update project document
 	ProjectModel.update({userId : userId, projectId: req.body.projectId},{projectUpdate}, function(err, doc){
 		if(err) res.json({data:{status : 500}});
 		res.json({data: {status : 200}});
 	});
+});
+
+
+ProjectRouter.post('/deleteProject', function(req, res, next){
+	var userId = req.cookies['token'].split('-')[1];
+	
+	var projectId = req.body.projectId;
+	
+	ProjectModel.findByIdAndRemove({_id : projectId, userId : userId}, function(err, project){
+		if(err) res.json({data:{status : 500}});
+		else {
+			var currentProject = req.cookies['currentProject'];
+			if(projectId === currentProject){
+				//remove current project id from cookies
+				res.cookie('currentProject','', { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});				
+			}
+			
+			res.json({data: {status : 200}});
+		}
+	})
 });
 
 ProjectMiddlewre.use('/project', ProjectRouter);
