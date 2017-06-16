@@ -47,22 +47,16 @@ ProjectRouter.post('/addProject', function(req, res, next){
 	newProject.description = req.body.description;
 	newProject.isCurrent = req.body.isCurrent;
 	if(!req.body.isCurrent){
-		console.log(111);
 		if(req.body.completionDate !== undefined && req.body.completionDate !== ''){
-			console.log(222);
 			newProject.completionDate = dateConverter(req.body.completionDate);
 			console.log(req.body.completionDate);
 		}else{
-			console.log(333);
 			newProject.completionDate = "";
 		}
 	}else {
-		console.log(444);
 		if(req.body.expCompDate !== undefined && req.body.expCompDate !== ''){
-			console.log(555);
 			newProject.expCompDate = dateConverter(req.body.expCompDate);
 		}else{
-			console.log(666);
 			newProject.expCompDate = "";
 		}
 	}
@@ -92,7 +86,7 @@ ProjectRouter.post('/addProject', function(req, res, next){
 
 ProjectRouter.get('/getProject/:projectId', function(req, res, next){
 	var userId = req.cookies['token'].split('-')[1];
-	
+	console.log(req.params.projectId);
 	ProjectModel.findOne({projectId: req.params.projectId, userId : userId}).populate('client').exec(function(err, project){
 		if(err) res.json({data:{status : 500}});
 		res.json({data: {status : 200, project}});
@@ -102,56 +96,59 @@ ProjectRouter.get('/getProject/:projectId', function(req, res, next){
 ProjectRouter.post('/updateProject', function(req, res, next){
 	var userId = req.cookies['token'].split('-')[1];
 	//var userId = "591ac03b5f2cf028a0124b6b";
+	console.log(req.body);
 	
-	var projectUpdate = {};
+	var updatedProject = {};
 	
 	if(req.body.projectName !== ""){
-		projectUpdate.projectName = req.body.projectName;
+		updatedProject.projectName = req.body.projectName;
 	}
 	
 	if(req.body.description !== ""){
-		projectUpdate.description = req.body.description;
+		updatedProject.description = req.body.description;
 	}
 	
 	if(req.body.client !== ""){
-		projectUpdate.client = req.body.client;
+		updatedProject.client = req.body.client;
 	}
 	
-	projectUpdate.isCurrent = req.body.isCurrent;
-	
-	if(req.body.expCompDate !== "" && req.body.expCompDate !== null){
-		if(req.body.isCurrent){
-			projectUpdate.expCompDate = dateConverter(req.body.expCompDate);
-		}else {
-			projectUpdate.expCompDate = "";
+	if(req.body.isCurrent){
+		if(req.body.expCompDate !== "" && req.body.expCompDate !== null){
+			if(req.body.isCurrent){
+				updatedProject.expCompDate = dateConverter(req.body.expCompDate);
+			}else {
+				updatedProject.expCompDate = null;
+			}
 		}
+		updatedProject.isCurrent = true;
+	}else {
+		if(req.body.completionDate !== "" && req.body.completionDate !== null){
+			updatedProject.completionDate = dateConverter(req.body.completionDate);
+			}else {
+				updatedProject.completionDate = null;
+			}
+		
+		updatedProject.isCurrent = false;
 	}
 	
-	
-	if(req.body.completionDate !== "" && req.body.completionDate !== null){
-		if(!req.body.isCurrent){
-			projectUpdate.completionDate = dateConverter(req.body.completionDate);
-			projectUpdate.isCurrent = 'false';
-			
-			//remove current project id from cookies
-			res.cookie('currentProject','', { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
-			
-			//Update user document, by removing current project id.
-			UserModel.update({_id: userId},{'currentProject' : ''}, function(err, doc){
-				if(err) res.json({data: {status : 500}});
-				res.json({data: {status : 200}});
-			});
-		}else {
-			projectUpdate.completionDate = "";
-		}
-	}
-	
-	console.log(projectUpdate);
-	//update project document
-	ProjectModel.update({userId : userId, projectId: req.body.projectId},{projectUpdate}, function(err, doc){
-		if(err) res.json({data:{status : 500}});
+	/*ProjectModel.findOne({userId : userId, _id : req.body._id}, function(err, doc){
+		
+		
+		doc.save();
 		res.json({data: {status : 200}});
 	});
+	*/
+	
+	ProjectModel.update({userId : userId, _id : req.body._id}, {$set: updatedProject}, function(err, doc){
+		if(err) res.json({data:{status : 500}});
+		res.cookie('currentProject','', { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
+		
+		//update user document, with current project id and update the project id in session
+		UserModel.update({_id: userId},{'currentProject' : ''}, function(err, doc){
+			if(err) res.json({data: {status : 500}});
+			res.json({data: {status : 200}});
+		});
+	})
 });
 
 
