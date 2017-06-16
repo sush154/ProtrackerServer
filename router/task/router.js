@@ -49,7 +49,10 @@ TaskRouter.post('/addTask', function(req, res){
 	});
 });
 
-TaskRouter.get('/getAllTasks', function(req, res){
+/**
+ * Method to populate the tasks for current project
+ */
+TaskRouter.get('/getProjectTasks', function(req, res){
 	var userId =req.cookies['token'].split('-')[1];
 	
 	//var userId = '591ac03b5f2cf028a0124b6b';
@@ -62,6 +65,26 @@ TaskRouter.get('/getAllTasks', function(req, res){
 		res.json({data: {status : 200, tasks}});
 	});
 });
+
+/**
+ * Method to populate all the tasks irrelevant to current project. The tasks would be populated for logged in user
+ */
+
+TaskRouter.get('/getAllTasks', function(req, res){
+	var userId =req.cookies['token'].split('-')[1];
+	
+	//var userId = '591ac03b5f2cf028a0124b6b';
+	//var userId = '591ad73de365082a6c00db32';
+	
+	TaskModel.find({userId : userId},'taskId taskSummary criticality expectedComDate taskStatus completionDate', function(err, tasks){
+		if(err) res.json({data: {status : 500}});
+		res.json({data: {status : 200, tasks}});
+	});
+});
+
+/**
+ * Method to task details for selected task
+ */
 
 TaskRouter.get('/getTask/:id', function(req, res){
 	var taskId = req.params.id;
@@ -76,6 +99,10 @@ TaskRouter.get('/getTask/:id', function(req, res){
 		res.json({data: {status : 200, task}});
 	});
 });
+
+/**
+ * Method for updating selected task. The task which are marked as complete could not be updated
+ */
 
 TaskRouter.post('/updateTask', function(req, res){
 	
@@ -122,7 +149,9 @@ TaskRouter.post('/updateTask', function(req, res){
 	})
 });
 
-
+/**
+ * Method to add comment for the selected task
+ */
 TaskRouter.post('/addComment', function(req, res){
 	var userId =req.cookies['token'].split('-')[1];
 	
@@ -147,6 +176,9 @@ TaskRouter.post('/addComment', function(req, res){
 	});
 });
 
+/**
+ * Method to add image for selected task
+ */
 TaskRouter.post('/addImage', function(req, res){
 	var userId =req.cookies['token'].split('-')[1];
 	
