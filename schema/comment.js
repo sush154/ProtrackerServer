@@ -3,7 +3,8 @@ var sequenceGenrator = require('mongoose-sequence-plugin');
 
 var CommentSchema = mongoose.Schema({
 	commentId 		: String,
-	comment			: String
+	comment			: String,
+	date			: Date
 });
 
 CommentSchema.plugin(sequenceGenrator,{
