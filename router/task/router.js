@@ -37,7 +37,6 @@ TaskRouter.post('/addTask', function(req, res){
 	newTask.taskSummary = req.body.taskSummary;
 	newTask.criticality = req.body.criticality;
 	newTask.description = req.body.description;
-	newTask.taskType = req.body.taskType;
 	newTask.taskStatus = req.body.taskStatus;
 	newTask.userId = userId;
 	newTask.expectedComDate = dateConverter(req.body.expectedComDate);
@@ -125,10 +124,6 @@ TaskRouter.post('/updateTask', function(req, res){
 	
 	if(req.body.description !== ""){
 		taskUpdates.description = req.body.description;
-	}
-	
-	if(req.body.taskType !== ""){
-		taskUpdates.taskType = req.body.taskType;
 	}
 	
 	if(req.body.taskStatus !== ""){
