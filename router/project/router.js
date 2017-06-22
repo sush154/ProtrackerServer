@@ -27,7 +27,7 @@ ProjectRouter.get('/getAllProjects', function(req, res, next){
 	
 	var userId = req.cookies['token'].split('-')[1];
 	//var userId = "591ac03b5f2cf028a0124b6b";
-	ProjectModel.find({'userId': userId}).populate('client').exec(function(err, projects){
+	ProjectModel.find({'userId': userId}).populate('client').select('_id projectId projectName client').exec(function(err, projects){
 		if(err) res.json({data:{status : 500}});
 		res.json({data: {status : 200, projects}});
 	})
