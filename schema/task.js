@@ -6,7 +6,6 @@ var TaskSchema = mongoose.Schema({
 	taskSummary		: String,
 	criticality		: String,
 	description		: String,
-	taskType		: String, //Issue or task
 	taskComments	: [{type: mongoose.Schema.Types.ObjectId, ref: 'comment'}],
 	taskStatus		: String,
 	expectedComDate	: Date,
