@@ -20,9 +20,13 @@ RegisterRouter.post('', function(req, res, next){
 			newUser.lastName = req.body.lastName;
 			newUser.email = req.body.emailAddress;
 			newUser.password = req.body.password;
+			newUser.currentProject = '';
 			
 			newUser.save(function(err, doc){
-				if(err) res.json({data: {status : 500}});
+				if(err) return res.json({data: {status : 500}});
+				
+				res.cookie('currentProject','', { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
+				
 				res.json({data: {status : 200}});
 			});
 		}else {
