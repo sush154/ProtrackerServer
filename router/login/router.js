@@ -63,12 +63,19 @@ loginRouter.post('', function(req, res, next){
 	
 	passport.authenticate('local-login', function(err, user, info){
 
-        if(err){console.log("500");res.json({status:500});}
-        if(!user){console.log("401");res.json({status: 401});}
-        var token = Math.random().toString() + "-" + user._id;
-        res.cookie('token',token, { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
-        res.cookie('currentProject',user.currentProject, { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
-        res.json({status: 200});
+        if(err){return res.json({status:500});}
+        if(!user){return res.json({status: 401});}
+        else{
+        	var token = Math.random().toString() + "-" + user._id;
+	        res.cookie('token',token, { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
+	        if(user.currentProject){
+	        	res.cookie('currentProject',user.currentProject, { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
+	        }else{
+	        	res.cookie('currentProject','', { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
+	        }
+	        
+	        res.json({status: 200});
+        }
         
    })(req, res, next);
 	
