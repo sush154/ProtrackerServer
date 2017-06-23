@@ -27,7 +27,7 @@ ProjectRouter.get('/getAllProjects', function(req, res, next){
 	
 	var userId = req.cookies['token'].split('-')[1];
 	//var userId = "591ac03b5f2cf028a0124b6b";
-	ProjectModel.find({'userId': userId}).populate('client').select('_id projectId projectName client').exec(function(err, projects){
+	ProjectModel.find({'userId': userId}).populate('client').select('_id projectId projectName client isCurrent').exec(function(err, projects){
 		if(err) res.json({data:{status : 500}});
 		res.json({data: {status : 200, projects}});
 	})
@@ -63,15 +63,17 @@ ProjectRouter.post('/addProject', function(req, res, next){
 	
 		
 	var currentProject = req.cookies['currentProject'];
-	if(currentProject !== '' && (req.body.isCurrent || req.body.isCurrent === 'true')){
-		res.json({data: {status : 201}});
+	
+	if((currentProject !== 'undefined' && currentProject !== '') && (req.body.isCurrent || req.body.isCurrent === 'true')){
+		return res.json({data: {status : 201}});
 	}
 	else{
 		newProject.save(function(err, project){
 			if(err){console.log(err); res.json({data: {status : 500}});}
 			else{
-				//if cookies does not have current project, add current one in cookies 
-				res.cookie('currentProject',project._id, { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
+				//if cookies does not have current project, add current one in cookies
+				
+				res.cookie('currentProject',String(project._id), { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
 				
 				//update user document, with current project id and update the project id in session
 				UserModel.update({_id: userId},{'currentProject' : project._id}, function(err, doc){
