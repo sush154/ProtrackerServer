@@ -20,7 +20,7 @@ TaskRouter.use(function (req, res, next){
 	    next();
 	} else {
 	    res.cookie("token", "", { expires: new Date() });
-	    res.json({data: {status : 401}});
+	    return res.json({data: {status : 401}});
 	}/*next();*/
 });
 
@@ -43,7 +43,7 @@ TaskRouter.post('/addTask', function(req, res){
 	newTask.project = req.body.projectId;
 	
 	newTask.save(function(err, doc){
-		if(err) res.json({data: {status : 500}});
+		if(err) {return res.json({data: {status : 500}});}
 		res.json({data: {status : 200}});
 	});
 });
@@ -63,7 +63,7 @@ TaskRouter.get('/getProjectTasks', function(req, res){
 		return res.json({data: {status : 201}});
 	}else{
 		TaskModel.find({userId : userId, project : project},'taskId taskSummary criticality expectedComDate taskStatus completionDate', function(err, tasks){
-			if(err) res.json({data: {status : 500}});
+			if(err) {return res.json({data: {status : 500}});}
 			res.json({data: {status : 200, tasks}});
 		});
 	}
@@ -80,7 +80,7 @@ TaskRouter.get('/getAllTasks', function(req, res){
 	//var userId = '591ad73de365082a6c00db32';
 	
 	TaskModel.find({userId : userId},'taskId taskSummary criticality expectedComDate taskStatus completionDate', function(err, tasks){
-		if(err) res.json({data: {status : 500}});
+		if(err) {return res.json({data: {status : 500}});}
 		res.json({data: {status : 200, tasks}});
 	});
 });
@@ -98,7 +98,7 @@ TaskRouter.get('/getTask/:id', function(req, res){
 	//var userId = '591ad73de365082a6c00db32';
 	
 	TaskModel.findOne({userId : userId, taskId : taskId}).populate([{path:'taskComments'},{path:'project'}]).exec(function(err, task){
-		if(err) res.json({data: {status : 500}});
+		if(err) {return res.json({data: {status : 500}});}
 		res.json({data: {status : 200, task}});
 	});
 });
@@ -149,6 +149,34 @@ TaskRouter.post('/updateTask', function(req, res){
 });
 
 /**
+ * Method to delete task
+ */
+TaskRouter.post('/deleteTask', function(req, res){
+	var userId = req.cookies['token'].split('-')[1];
+
+	var taskId = req.body.taskId;
+
+	// Retrieve comments of the task and remove them first
+	TaskModel.findOne({_id : taskId, userId : userId}, function(err, doc){
+		for(let comment of doc.taskComments){
+			CommentModel.findByIdAndRemove({_id : comment}, function(err, comment){
+				if(err) {console.log("comment delete ",err); return res.json({data:{status : 500}});}
+			})
+		}
+		
+		// Remove task
+		TaskModel.findByIdAndRemove({_id : taskId, userId : userId}, function(err, doc){
+			if(err) {console.log("task delete ", err); return res.json({data:{status : 500}});}
+			res.json({data: {status : 200}});
+		});
+		
+		
+	});
+
+	
+});
+
+/**
  * Method to add comment for the selected task
  */
 TaskRouter.post('/addComment', function(req, res){
@@ -169,7 +197,7 @@ TaskRouter.post('/addComment', function(req, res){
 		taskUpdates.taskComments = [doc._id];
 		
 		TaskModel.update({userId : userId, _id : req.body.taskId}, {'$push':{'taskComments' : doc._id}},  function(err, task){
-			if(err) res.json({data: {status : 500}});
+			if(err) {return res.json({data: {status : 500}});}
 			res.json({data: {status : 200}});
 		})
 	});
@@ -221,12 +249,88 @@ TaskRouter.post('/addImage', function(req, res){
 	//var userId = '591ad73de365082a6c00db32';
 	
 	TaskModel.update({userId : userId, taskId : req.body.taskId},{'$push' : {'images' : req.body.image}}, function(err, task){
-		if(err) res.json({data: {status : 500}});
+		if(err) {return res.json({data: {status : 500}});}
 		res.json({data: {status : 200}});
 	});
 });
 
+/**
+ * Method to change the status of the task
+ */
+TaskRouter.post('/changeStatus', function(req, res){
+	var userId =req.cookies['token'].split('-')[1];
 
+	TaskModel.update({userId : userId, _id : req.body.taskId}, {$set: {'taskStatus' : req.body.taskStatus}}, function(err, doc){
+		if(err){console.log(err);return res.json({data: {status : 500}});}
+		res.json({data: {status : 200}});
+	});
+});
+
+/**
+ * Method to mark task as defective
+ */
+TaskRouter.post('/markDefective', function(req, res){
+	var userId =req.cookies['token'].split('-')[1];
+	
+	//var userId = '591ac03b5f2cf028a0124b6b';
+	//var userId = '591ad73de365082a6c00db32';
+	
+	var newComment = new CommentModel();
+	newComment.comment = req.body.comment;
+	newComment.date = new Date();
+	
+	newComment.save(function(err, doc){
+		if(err){ return res.json({data: {status : 500}});}
+		
+		var taskUpdates = {};
+		
+		taskUpdates.taskComments = [doc._id];
+		
+		TaskModel.update({userId : userId, _id : req.body.taskId}, {'$push':{'taskComments' : doc._id}},  function(err, task){
+			if(err) {return res.json({data: {status : 500}});}
+			else {
+				//res.json({data: {status : 200}});
+				TaskModel.update({userId : userId, _id : req.body.taskId}, {$set: {'taskStatus' : '5'}}, function(err, doc){
+					if(err){console.log(err);return res.json({data: {status : 500}});}
+					res.json({data: {status : 200}});
+				});
+			}
+		})
+	});
+});
+
+/**
+ * Method to mark task as complete
+ */
+TaskRouter.post('/markComplete', function(req, res){
+	var userId =req.cookies['token'].split('-')[1];
+	
+	//var userId = '591ac03b5f2cf028a0124b6b';
+	//var userId = '591ad73de365082a6c00db32';
+	
+	var newComment = new CommentModel();
+	newComment.comment = req.body.comment;
+	newComment.date = new Date();
+	
+	newComment.save(function(err, doc){
+		if(err){ return res.json({data: {status : 500}});}
+		
+		var taskUpdates = {};
+		
+		taskUpdates.taskComments = [doc._id];
+		
+		TaskModel.update({userId : userId, _id : req.body.taskId}, {'$push':{'taskComments' : doc._id}},  function(err, task){
+			if(err) {return res.json({data: {status : 500}});}
+			else {
+				//res.json({data: {status : 200}});
+				TaskModel.update({userId : userId, _id : req.body.taskId}, {$set: {'taskStatus' : '4', 'completionDate' : dateConverter(req.body.completionDate)}}, function(err, doc){
+					if(err){console.log(err);return res.json({data: {status : 500}});}
+					res.json({data: {status : 200}});
+				});
+			}
+		})
+	});
+});
 
 TaskMiddleware.use('/task', TaskRouter);
 

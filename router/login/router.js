@@ -74,7 +74,7 @@ loginRouter.post('', function(req, res, next){
 	        	res.cookie('currentProject','', { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
 	        }
 	        
-	        res.json({status: 200});
+	        return res.json({status: 200});
         }
         
    })(req, res, next);
