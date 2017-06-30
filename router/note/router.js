@@ -54,6 +54,35 @@ NoteRouter.post('/addNote', function(req, res){
 	})
 });
 
+/**
+ * Method to update Note for the logged in user
+ */
+NoteRouter.post('/updateNote', function(req, res){
+	var userId =req.cookies['token'].split('-')[1];
+	
+	var updateNote = {};
+	
+	updateNote.note = req.body.note.replace(/\n/g, '<br />');
+
+	NoteModel.update({userId : userId, _id : req.body._id}, {$set: updateNote}, function(err, doc){
+		if(err){console.log(err);return res.json({data: {status : 500}});}
+		res.json({data: {status : 200}});
+	});
+	
+});
+
+/**
+ * Method to delete Note for logged in user
+ */
+NoteRouter.post('/deleteNote', function(req, res){
+	var userId =req.cookies['token'].split('-')[1];
+	
+	NoteModel.findByIdAndRemove({_id : req.body.noteId, userId : userId}, function(err, doc){
+		if(err) {console.log("note delete ", err); return res.json({data:{status : 500}});}
+		res.json({data: {status : 200}});
+	});
+});
+
 NoteMiddleware.use('/notes', NoteRouter);
 
 module.exports = NoteMiddleware;

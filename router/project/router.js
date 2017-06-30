@@ -19,7 +19,7 @@ ProjectRouter.use(function(req, res, next){
         next();
     } else {
         res.cookie("token", "", { expires: new Date() });
-        res.json({data: {status : 401}});
+        return res.json({data: {status : 401}});
     }/*next();*/
 });
 
@@ -28,7 +28,7 @@ ProjectRouter.get('/getAllProjects', function(req, res, next){
 	var userId = req.cookies['token'].split('-')[1];
 	//var userId = "591ac03b5f2cf028a0124b6b";
 	ProjectModel.find({'userId': userId}).populate('client').select('_id projectId projectName client isCurrent').exec(function(err, projects){
-		if(err) res.json({data:{status : 500}});
+		if(err) return res.json({data:{status : 500}});
 		res.json({data: {status : 200, projects}});
 	})
 	
@@ -73,13 +73,17 @@ ProjectRouter.post('/addProject', function(req, res, next){
 			else{
 				//if cookies does not have current project, add current one in cookies
 				
-				res.cookie('currentProject',String(project._id), { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
+				if(newProject.isCurrent){
+					res.cookie('currentProject',String(project._id), { httpOnly: false,secure:false,expires: new Date(Date.now() + (1*24*60*60*1000))});
 				
-				//update user document, with current project id and update the project id in session
-				UserModel.update({_id: userId},{'currentProject' : project._id}, function(err, doc){
-					if(err) res.json({data: {status : 500}});
+					//update user document, with current project id and update the project id in session
+					UserModel.update({_id: userId},{'currentProject' : project._id}, function(err, doc){
+						if(err) return res.json({data: {status : 500}});
+						res.json({data: {status : 200}});
+					});
+				}else {
 					res.json({data: {status : 200}});
-				});
+				}
 			
 			}
 		});
@@ -90,7 +94,7 @@ ProjectRouter.get('/getProject/:projectId', function(req, res, next){
 	var userId = req.cookies['token'].split('-')[1];
 	console.log(req.params.projectId);
 	ProjectModel.findOne({projectId: req.params.projectId, userId : userId}).populate('client').exec(function(err, project){
-		if(err) res.json({data:{status : 500}});
+		if(err) return res.json({data:{status : 500}});
 		res.json({data: {status : 200, project}});
 	});
 });
@@ -147,7 +151,7 @@ ProjectRouter.post('/updateProject', function(req, res, next){
 		
 		//update user document, with current project id and update the project id in session
 		UserModel.update({_id: userId},{'currentProject' : ''}, function(err, doc){
-			if(err) res.json({data: {status : 500}});
+			if(err) return res.json({data: {status : 500}});
 			res.json({data: {status : 200}});
 		});
 	})
@@ -160,7 +164,7 @@ ProjectRouter.post('/deleteProject', function(req, res, next){
 	var projectId = req.body.projectId;
 	
 	ProjectModel.findByIdAndRemove({_id : projectId, userId : userId}, function(err, project){
-		if(err) res.json({data:{status : 500}});
+		if(err) return res.json({data:{status : 500}});
 		else {
 			var currentProject = req.cookies['currentProject'];
 			if(projectId === currentProject){
@@ -171,6 +175,34 @@ ProjectRouter.post('/deleteProject', function(req, res, next){
 			res.json({data: {status : 200}});
 		}
 	})
+});
+
+ProjectRouter.post('/projectFilter', function(req, res){
+	var userId = req.cookies['token'].split('-')[1];
+	
+	var query = {};
+	
+	query['userId'] = userId;
+	query[req.body.filterType] = req.body.filterValue;
+
+	if(req.body.filterType === 'clientDomain'){
+		ProjectModel.find({'userId' : userId}).populate({path : 'client', match : {clientDomain : req.body.filterValue}}).select('_id projectId projectName client isCurrent').exec(function(err, projects){
+			if(err) {console.log(err); return res.json({data:{status : 500}});}
+			let projRes = projects.filter(function(project){if(project.client){return project;}});
+			res.json({data: {status : 200, projects:projRes}});
+		});
+	}else if(req.body.filterType === 'projectName'){
+		ProjectModel.find({'userId' : userId, 'projectName' : new RegExp(req.body.filterValue, 'i')}).populate('client').select('_id projectId projectName client isCurrent').exec(function(err, projects){
+			if(err) {console.log(err); return res.json({data:{status : 500}});}
+			res.json({data: {status : 200, projects}});
+		});
+	}else {
+		ProjectModel.find(query).populate('client').select('_id projectId projectName client isCurrent').exec(function(err, projects){
+			if(err) {console.log(err); return res.json({data:{status : 500}});}
+			res.json({data: {status : 200, projects}});
+		});
+	}
+	
 });
 
 ProjectMiddlewre.use('/project', ProjectRouter);

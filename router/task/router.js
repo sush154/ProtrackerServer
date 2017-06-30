@@ -57,16 +57,27 @@ TaskRouter.get('/getProjectTasks', function(req, res){
 	//var userId = '591ac03b5f2cf028a0124b6b';
 	//var userId = '591ad73de365082a6c00db32';
 	
-	var project = req.cookies['currentProject'];
-	
-	if(project === 'undefined' && project === ''){
-		return res.json({data: {status : 201}});
-	}else{
-		TaskModel.find({userId : userId, project : project},'taskId taskSummary criticality expectedComDate taskStatus completionDate', function(err, tasks){
-			if(err) {return res.json({data: {status : 500}});}
+	var projectId = req.cookies['currentProject'];
+
+	if(projectId === ''){
+		return res.json({data: {status : 200, tasks : []}});
+	}else {
+		TaskModel.find({userId : userId, project : projectId},'taskId taskSummary criticality expectedComDate taskStatus completionDate', function(err, tasks){
+			if(err) {console.log(err); return res.json({data: {status : 500}});}
 			res.json({data: {status : 200, tasks}});
 		});
 	}
+	
+	/*if(projectId === 'undefined' && projectId === ""){
+		return res.json({data: {status : 201}});
+	}else{
+		TaskModel.find({userId : userId, project : projectId},'taskId taskSummary criticality expectedComDate taskStatus completionDate', function(err, tasks){
+			if(err) {console.log(err); return res.json({data: {status : 500}});}
+			res.json({data: {status : 200, tasks}});
+		});
+	}*/
+	
+	
 });
 
 /**
